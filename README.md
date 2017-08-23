@@ -46,7 +46,7 @@ from transferflow.classification.trainer import Trainer
 # Instantiate Trainer with training data, base model and configuration
 scaffold_path = './test/fixtures/scaffolds/scene_type'
 base_model_path = './models/inception_v3'
-trainer = Trainer(base_model_path, scaffold_path, num_steps=1000)
+trainer = Trainer(base_model_path, scaffold_path, max_num_steps=1000)
 
 # Prepare session (calculates Bottleneck files)
 trainer.prepare()

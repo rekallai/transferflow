@@ -49,3 +49,33 @@ def get_tensor_namespaces(sess):
         if len(path) > 1 and path[0] not in namespaces:
             namespaces.append(path[0])
     return namespaces
+
+
+def prune_models(model_list, model_accuracy_list, accepted_accuracy_delta, absolute=True):
+    validation_accuracy = [entry['validation'] for entry in model_accuracy_list]
+    max_acc = max(validation_accuracy)
+
+    # Use absolute when final max_acc is not known yet, e.g. during training
+    #  Else it would not be fair; models would be pruned that would not have
+    #  been pruned when this method would only have beeen called after all
+    #  training steps were completed
+    if absolute:
+        accepted_acc = max_acc - (accepted_accuracy_delta / 100)
+    else:
+        accepted_acc = (1 - (accepted_accuracy_delta / 100)) * max_acc
+
+    accepted_model_indices = filter(
+        lambda i: validation_accuracy[i] >= accepted_acc,
+        range(len(validation_accuracy)))
+
+    logger.debug('Models pruned ... %d of %d models remaining ... ' % (len(accepted_model_indices), len(model_list)))
+
+    return [model_list[i] for i in accepted_model_indices], \
+           [model_accuracy_list[i] for i in accepted_model_indices]
+
+
+def log_model_accuracy(logger, model_type, set_name, accuracy_data):
+        logger.info('%s model (step=%d): %s accuracy = %.1f%%' % (model_type,
+                                                                  set_name,
+                                                                  accuracy_data['step'],
+                                                                  accuracy_data[set_name] * 100))

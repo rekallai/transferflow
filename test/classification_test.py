@@ -37,7 +37,7 @@ class ClassificationTest(unittest.TestCase):
         scaffold_dir = test_dir + '/fixtures/scaffolds/scene_type'
         output_model_path = test_dir + '/fixtures/tmp/scene_type_test'
         base_model_path = base_models_dir + '/inception_v3'
-        trainer = Trainer(base_model_path, scaffold_dir, num_steps=100)
+        trainer = Trainer(base_model_path, scaffold_dir, max_num_steps=100)
         clear_scaffold_cache(scaffold_dir)
         trainer.prepare()
         benchmark_info = trainer.train(output_model_path)
