@@ -2,6 +2,8 @@
 import os
 import sys
 import unittest
+from PIL import Image
+import imghdr
 
 test_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(test_dir + '/../')
@@ -23,6 +25,18 @@ if not os.path.isdir(test_dir + '/fixtures/tmp'):
 
 base_models_dir = test_dir + '/../models'
 
+def _ensure_jpeg_path(image_path):
+    image_type = imghdr.what(image_path)
+    if image_type != 'jpeg':
+        jpg_image_path = image_path + '.jpg'
+        try:
+            im = Image.open(image_path)
+            im.save(jpg_image_path)
+            return jpg_image_path
+        except:
+            logging.warn('Warning, could not convert to JPEG ({}), removing {}'.format(sys.exc_info()[0], image_path))
+            os.remove(jpg_image_path)
+    return image_path
 
 class ClassificationTest(unittest.TestCase):
 
@@ -84,6 +98,43 @@ class ClassificationTest(unittest.TestCase):
         benchmark_info = trainer.train(output_model_path)
         self.assertEqual(benchmark_info['test_accuracy'] >= 0.75, True)
         validate_model(output_model_path)
+
+    def test_8_train_and_validate_handguns(self):
+        scaffold_dir = test_dir + '/fixtures/scaffolds/handguns'
+        output_model_path = test_dir + '/fixtures/tmp/handguns'
+        base_model_path = base_models_dir + '/inception_v3'
+        #trainer = Trainer(base_model_path, scaffold_dir, max_num_steps=200)
+        #clear_scaffold_cache(scaffold_dir)
+        #trainer.prepare()
+        #benchmark_info = trainer.train(output_model_path)
+        #print('benchmark_info', benchmark_info['best-validation']['accuracy'].keys())
+        #self.assertEqual(benchmark_info['test_accuracy'] >= 0.75, True)
+
+        expected_results = {
+            '18.png': 'None',
+            '350.png': 'Handgun',
+            '357.png': 'Handgun',
+            '384.png': 'Handgun',
+            '410.png': 'Handgun',
+            '424.png': 'Handgun',
+            '456.png': 'None',
+            '538.png': 'None',
+            '554.png': 'None'
+        }
+        validation_images_dir = test_dir + '/fixtures/images/handguns'
+        runner = Runner(output_model_path + '-final')
+        print('')
+        for path in expected_results:
+            labels = runner.run(_ensure_jpeg_path(validation_images_dir + '/' + path))
+            passed = False
+            if labels[0]['name'] == expected_results[path]:
+                passed = True
+            summary = ', '.join(map(lambda x: '{}={}'.format(x['name'], x['score']), labels))
+            if passed:
+                print('{}: GOOD (expected {}, was {})'.format(path, expected_results[path], summary))
+            else:
+                print('{}: BAD (expected {}, was {})'.format(path, expected_results[path], summary))
+
 
 if __name__ == "__main__":
     unittest.main()
