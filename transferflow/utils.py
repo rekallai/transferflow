@@ -60,9 +60,9 @@ def prune_models(model_list, model_accuracy_list, accepted_accuracy_delta, absol
     #  been pruned when this method would only have beeen called after all
     #  training steps were completed
     if absolute:
-        accepted_acc = max_acc - (accepted_accuracy_delta / 100)
+        accepted_acc = max_acc - (accepted_accuracy_delta / 100.0)
     else:
-        accepted_acc = (1 - (accepted_accuracy_delta / 100)) * max_acc
+        accepted_acc = (1 - (accepted_accuracy_delta / 100.0)) * max_acc
 
     accepted_model_indices = filter(
         lambda i: validation_accuracy[i] >= accepted_acc,
@@ -76,6 +76,6 @@ def prune_models(model_list, model_accuracy_list, accepted_accuracy_delta, absol
 
 def log_model_accuracy(logger, model_type, set_name, accuracy_data):
         logger.info('%s model (step=%d): %s accuracy = %.1f%%' % (model_type,
-                                                                  set_name,
                                                                   accuracy_data['step'],
+                                                                  set_name,
                                                                   accuracy_data[set_name] * 100))

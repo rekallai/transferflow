@@ -19,5 +19,5 @@ DEFAULT_SETTINGS = {
     # accepted_time_without_improvement is a percentage
     # Percentage of max_num_steps that the training continues without encountering a better validation model
     # After that the training stops
-    'accepted_time_without_improvement' : 15,
+    'accepted_time_without_improvement': 20,
 }

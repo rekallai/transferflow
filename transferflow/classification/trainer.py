@@ -116,7 +116,7 @@ class Trainer(object):
         earliest_good_model_accuracy = None
 
         relative_wait_time = settings['accepted_time_without_improvement']
-        absolute_wait_time = (relative_wait_time/100)*settings['max_num_steps']
+        absolute_wait_time = (relative_wait_time/100.0)*settings['max_num_steps']
 
         # model at last training step
         final_model = None
@@ -257,12 +257,12 @@ class Trainer(object):
 
             benchmark_info = {
                 'validation_accuracy': float(accuracy['validation']),
-                'train_accuracy': float(accuracy['train']),
+                'train_accuracy': float(accuracy['training']),
                 'test_accuracy': float(accuracy['test']),
                 'training-step': int(accuracy['step'])
             }
 
-            model_path_for_type = (output_model_path, model_type)
+            model_path_for_type = '%s-%s' % (output_model_path, model_type)
             create_empty_model(model_path_for_type)
             transfer_model_meta(self.scaffold_path, model_path_for_type)
             output_graph_path = model_path_for_type + '/state/model.pb'
