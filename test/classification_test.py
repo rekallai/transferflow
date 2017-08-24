@@ -103,11 +103,11 @@ class ClassificationTest(unittest.TestCase):
         scaffold_dir = test_dir + '/fixtures/scaffolds/handguns'
         output_model_path = test_dir + '/fixtures/tmp/handguns'
         base_model_path = base_models_dir + '/inception_v3'
-        #trainer = Trainer(base_model_path, scaffold_dir, max_num_steps=200)
-        #clear_scaffold_cache(scaffold_dir)
-        #trainer.prepare()
-        #benchmark_info = trainer.train(output_model_path)
-        #print('benchmark_info', benchmark_info['best-validation']['accuracy'].keys())
+        trainer = Trainer(base_model_path, scaffold_dir, max_num_steps=200)
+        clear_scaffold_cache(scaffold_dir)
+        trainer.prepare()
+        benchmark_info = trainer.train(output_model_path)
+        print('Validation Accuracy: {}'.format(benchmark_info['best-validation']['accuracy']['validation']))
         #self.assertEqual(benchmark_info['test_accuracy'] >= 0.75, True)
 
         expected_results = {
