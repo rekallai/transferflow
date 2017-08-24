@@ -1,7 +1,5 @@
 
 import os
-import shutil
-import sys
 import json
 from datetime import datetime
 
@@ -10,17 +8,19 @@ import tensorflow as tf
 from tensorflow.python.framework import graph_util
 from tensorflow.python.platform import gfile
 from inception import *
-from transferflow.utils import transfer_model_meta, prune_models, log_model_accuracy
+from transferflow.utils import transfer_model_meta
+from transferflow.utils import create_image_lists
+from transferflow.utils import prune_models
+from transferflow.utils import log_model_accuracy
 from nnpack.models import create_empty_model, save_model_benchmark_info
 from nnpack import load_labels
+from . import DEFAULT_SETTINGS
 
 import logging
 logger = logging.getLogger("transferflow.classification")
 
-from . import DEFAULT_SETTINGS
 
 class Trainer(object):
-
     def __init__(self, base_model_path, scaffold_path, **kwargs):
         self.base_model_path = base_model_path
         self.scaffold_path = scaffold_path
@@ -42,6 +42,8 @@ class Trainer(object):
         bottleneck_dir = self.scaffold_path + '/cache/bottlenecks'
 
         self.image_lists = create_image_lists(image_dir, settings['testing_percentage'], settings['validation_percentage'])
+        for label in self.image_lists:
+            category_lists = self.image_lists[label]
         class_count = len(self.image_lists.keys())
 
         if class_count == 0:
@@ -138,9 +140,8 @@ class Trainer(object):
             # Feed the bottlenecks and ground truth into the graph, and run a training
             # step.
             sess.run(train_step,
-                    feed_dict={bottleneck_input: train_bottlenecks,
-                              ground_truth_input: train_ground_truth})
-
+                     feed_dict={bottleneck_input: train_bottlenecks,
+                                ground_truth_input: train_ground_truth})
             # Every so often, print out how well the graph is training.
             is_last_step = (step + 1 == settings['max_num_steps'])
             has_waited_too_long = False
@@ -289,8 +290,8 @@ class Trainer(object):
     def _add_softmax_ids_to_labels(self):
         i = 0
         for label_id in self.image_lists:
-            if not self.labels.has_key(label_id):
+            if label_id not in self.labels:
                 raise Exception('Label with ID {} does not appear in labels.json, bad scaffold'.format(label_id))
             label = self.labels[label_id]
             label['node_id'] = i
-            i+=1
+            i += 1
