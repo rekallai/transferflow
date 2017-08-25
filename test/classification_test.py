@@ -103,12 +103,30 @@ class ClassificationTest(unittest.TestCase):
         scaffold_dir = test_dir + '/fixtures/scaffolds/handguns'
         output_model_path = test_dir + '/fixtures/tmp/handguns'
         base_model_path = base_models_dir + '/inception_v3'
-        trainer = Trainer(base_model_path, scaffold_dir, max_num_steps=200)
+        # trainer = Trainer(base_model_path,
+        #                   scaffold_dir,
+        #                   eval_step_interval=10,
+        #                   max_num_steps=2000,
+        #                   learning_rate=0.01,
+        #                   validation_percentage=20,
+        #                   testing_percentage=20)
+
+        trainer = Trainer(base_model_path,
+                          scaffold_dir,
+                          eval_step_interval=1,
+                          max_num_steps=1200,
+                          flip_left_right=True,
+                          random_crop=20,
+                          random_scale=20,
+                          random_brightness=50,
+                          learning_rate=0.01,
+                          validation_percentage=30,
+                          testing_percentage=20,
+                          accepted_time_without_improvement=33)
+
         clear_scaffold_cache(scaffold_dir)
         trainer.prepare()
-        benchmark_info = trainer.train(output_model_path)
-        print('Validation Accuracy: {}'.format(benchmark_info['best-validation']['accuracy']['validation']))
-        #self.assertEqual(benchmark_info['test_accuracy'] >= 0.75, True)
+        models = trainer.train(output_model_path)
 
         expected_results = {
             '18.png': 'None',
@@ -122,9 +140,14 @@ class ClassificationTest(unittest.TestCase):
             '554.png': 'None'
         }
         validation_images_dir = test_dir + '/fixtures/images/handguns'
-        runner = Runner(output_model_path + '-final')
+        runner = Runner(output_model_path + '-earliest-good')
         print('')
+
+        external_test_acc = 0.0
+        num_images = 0.0
         for path in expected_results:
+            num_images += 1
+
             labels = runner.run(_ensure_jpeg_path(validation_images_dir + '/' + path))
             passed = False
             if labels[0]['name'] == expected_results[path]:
@@ -132,8 +155,14 @@ class ClassificationTest(unittest.TestCase):
             summary = ', '.join(map(lambda x: '{}={}'.format(x['name'], x['score']), labels))
             if passed:
                 print('{}: GOOD (expected {}, was {})'.format(path, expected_results[path], summary))
+                external_test_acc += 1
             else:
                 print('{}: BAD (expected {}, was {})'.format(path, expected_results[path], summary))
+
+        external_test_acc = external_test_acc/num_images
+
+        print('EXTERNAL Test Accuracy: {}'.format(external_test_acc))
+        #self.assertEqual(external_test_acc >= 0.8, True)
 
 
 if __name__ == "__main__":
