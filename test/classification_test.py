@@ -114,7 +114,7 @@ class ClassificationTest(unittest.TestCase):
         trainer = Trainer(base_model_path,
                           scaffold_dir,
                           eval_step_interval=1,
-                          max_num_steps=1200,
+                          max_num_steps=2400,
                           flip_left_right=True,
                           random_crop=20,
                           random_scale=20,
@@ -129,15 +129,26 @@ class ClassificationTest(unittest.TestCase):
         models = trainer.train(output_model_path)
 
         expected_results = {
-            '18.png': 'None',
-            '350.png': 'Handgun',
-            '357.png': 'Handgun',
-            '384.png': 'Handgun',
-            '410.png': 'Handgun',
-            '424.png': 'Handgun',
-            '456.png': 'None',
-            '538.png': 'None',
-            '554.png': 'None'
+            '1020.png': 'Handgun',
+            '1021.png': 'Handgun',
+            '1029.png': 'Handgun',
+            '1070.png': 'Handgun',
+            '1131.png': 'None',
+            '1205.png': 'None',
+            '1342.png': 'None',
+            '418.png': 'None',
+            '498.png': 'None',
+            '575.png': 'None',
+            '745.png': 'None',
+            '869.png': 'Handgun',
+            '874.png': 'Handgun',
+            '878.png': 'Handgun',
+            '880.png': 'Handgun',
+            '891.png': 'Handgun',
+            '898.png': 'Handgun',
+            '905.png': 'None',
+            '923.png': 'Handgun',
+            '957.png': 'Handgun'
         }
         validation_images_dir = test_dir + '/fixtures/images/handguns'
         runner = Runner(output_model_path + '-earliest-good')
