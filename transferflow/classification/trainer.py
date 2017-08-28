@@ -62,7 +62,7 @@ class Trainer(object):
         else:
             cache_bottlenecks(sess, self.image_lists, image_dir, bottleneck_dir, self.jpeg_data_tensor, self.bottleneck_tensor)
 
-    def train(self, output_model_path):
+    def train(self, output_model_path, select_model_type='earliest-good'):
         if self.settings['max_num_steps'] < 1:
             logger.error('max_num_steps should at least be 1')
             return
@@ -251,41 +251,57 @@ class Trainer(object):
             }
         }
 
-        for model_type in models.keys():
-            log_model_accuracy(logger, model_type, 'test', models[model_type]['accuracy'])
-
-            accuracy = models[model_type]['accuracy']
-
-            benchmark_info = {
-                'validation_accuracy': float(accuracy['validation']),
-                'train_accuracy': float(accuracy['training']),
-                'test_accuracy': float(accuracy['test']),
-                'training-step': int(accuracy['step'])
-            }
-
-            model_path_for_type = '%s-%s' % (output_model_path, model_type)
-            create_empty_model(model_path_for_type)
-            transfer_model_meta(self.scaffold_path, model_path_for_type)
-            output_graph_path = model_path_for_type + '/state/model.pb'
-
-            with gfile.FastGFile(output_graph_path, 'wb') as f:
-              f.write(models[model_type]['model'].SerializeToString())
-              f.close()
-
-            # Persist labels with softmax IDs
-            with open(model_path_for_type + '/labels.json', 'w') as f:
-                json.dump({'labels': self.labels.values()}, f)
-
-            # Store benchmark_info
-            with open(model_path_for_type + '/benchmark.json', 'w+') as f:
-                json.dump(benchmark_info, f)
-                f.close()
+        # Write all models to disc
+        # for model_type in models.keys():
+            # model_path_for_type = '%s-%s' % (output_model_path, model_type)
+            # self._select_model(models, model_type, model_path_for_type)
 
         # Cleanup
         tf.reset_default_graph()
         sess.close()
 
-        return models
+        # outputs benchmark_info, models
+        return self._select_model(models, select_model_type, output_model_path), models
+
+
+    def _select_model(self, models, model_type, output_model_path):
+        """
+
+        :param models:          dictionary with models as returned by the train method
+        :param model_type:      model to select from the models
+        :output_model_path:     where to write the selected model to
+        :return:                benchmark info
+        """
+
+        log_model_accuracy(logger, model_type, 'test', models[model_type]['accuracy'])
+
+        accuracy = models[model_type]['accuracy']
+
+        benchmark_info = {
+            'validation_accuracy': float(accuracy['validation']),
+            'train_accuracy': float(accuracy['training']),
+            'test_accuracy': float(accuracy['test']),
+            'training-step': int(accuracy['step'])
+        }
+
+        create_empty_model(output_model_path)
+        transfer_model_meta(self.scaffold_path, output_model_path)
+        output_graph_path = output_model_path + '/state/model.pb'
+
+        with gfile.FastGFile(output_graph_path, 'wb') as f:
+            f.write(models[model_type]['model'].SerializeToString())
+            f.close()
+
+        # Persist labels with softmax IDs
+        with open(output_model_path + '/labels.json', 'w') as f:
+            json.dump({'labels': self.labels.values()}, f)
+
+        # Store benchmark_info
+        with open(output_model_path + '/benchmark.json', 'w+') as f:
+            json.dump(benchmark_info, f)
+            f.close()
+
+        return benchmark_info
 
     def _add_softmax_ids_to_labels(self):
         i = 0

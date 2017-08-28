@@ -106,7 +106,7 @@ class ClassificationTest(unittest.TestCase):
         # trainer = Trainer(base_model_path,
         #                   scaffold_dir,
         #                   eval_step_interval=10,
-        #                   max_num_steps=2000,
+        #                   max_num_steps=200,
         #                   learning_rate=0.01,
         #                   validation_percentage=20,
         #                   testing_percentage=20)
@@ -126,13 +126,14 @@ class ClassificationTest(unittest.TestCase):
 
         clear_scaffold_cache(scaffold_dir)
         trainer.prepare()
-        models = trainer.train(output_model_path)
+        # Uses earliest-good by default
+        benchmark_info, models = trainer.train(output_model_path)
 
         expected_results = {
             '1020.png': 'Handgun',
             '1021.png': 'Handgun',
             '1029.png': 'Handgun',
-            '1070.png': 'Handgun',
+            '1070.png': 'None',
             '1131.png': 'None',
             '1205.png': 'None',
             '1342.png': 'None',
@@ -151,7 +152,7 @@ class ClassificationTest(unittest.TestCase):
             '957.png': 'Handgun'
         }
         validation_images_dir = test_dir + '/fixtures/images/handguns'
-        runner = Runner(output_model_path + '-earliest-good')
+        runner = Runner(output_model_path)
         print('')
 
         external_test_acc = 0.0
